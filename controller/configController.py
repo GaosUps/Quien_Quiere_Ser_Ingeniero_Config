@@ -1,4 +1,5 @@
 from database import connection
+
 def create_table():
     query = '''
         IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='config_qqi' AND xtype='U')
@@ -45,3 +46,41 @@ def insert_config(jugadores, numero_preguntas, materia, nivel_pregunta):
     except Exception as e:
         print(f"Error al insertar la configuración: {e}")
         raise
+
+
+
+def insert_questions_batch(dataframe, batch_size=100):
+    query = '''
+        INSERT INTO preguntas (question, option1, option2, option3, option4, answer, materia, dificultad)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+    '''
+    try:
+        with connection.connect_db as conn:
+            cursor = conn.cursor()
+            for i in range(0, len(dataframe), batch_size):
+                batch = dataframe.iloc[i:i + batch_size]
+                batch_data = [
+                    (
+                        row['Question'], row['option1'], row['option2'], row['option3'],
+                        row['option4'], row['answer'], row['materia'], row['dificultad']
+                    )
+                    for _, row in batch.iterrows()
+                ]
+                cursor.executemany(query, batch_data)
+            conn.commit()
+            print(f"Se insertaron {len(dataframe)} registros en la base de datos.")
+    except Exception as e:
+        print(f"Error al insertar las preguntas: {e}")
+
+def prueba(dataframe,batch_size=50):
+    for i in range(0, len(dataframe), batch_size):
+        batch = dataframe.iloc[i:i + batch_size]
+        batch_data = [
+            (
+                row['Question'], row['option1'], row['option2'], row['option3'],
+                row['option4'], row['answer'], row['materia'], row['dificultad']
+            )
+            for _, row in batch.iterrows()
+
+        ]
+        print(batch_data)

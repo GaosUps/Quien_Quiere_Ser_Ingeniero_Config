@@ -2,7 +2,6 @@ from dotenv import load_dotenv
 load_dotenv()
 import os
 import pyodbc
-
 def connect_db():
     try:
         host = os.getenv('HOST')
